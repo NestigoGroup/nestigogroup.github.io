@@ -2,7 +2,7 @@
     <html>
     <head>
         <meta charset="UTF-8">
-        <title>Nestigo Group Homepage</title>
+        <title>jHttpClient Documentation - Nestigo Group</title>
         <style>
 /* From extension vscode.github */
 /*---------------------------------------------------------------------------------------------
@@ -44,25 +44,172 @@
         
     </head>
     <body class="vscode-body vscode-light">
-        <!-- title: Nestigo Group Homepage --> 
-<h1 id="nestigo-group-homepage">Nestigo Group Homepage</h1>
-<p>Welcome to the Nestigo Group where our goal is to build simple open source libraries and tools with small foot print and no external dependencies.</p>
+        <!-- title: jHttpClient Documentation - Nestigo Group --> 
 <ul>
-<li><a href="#nestigo-group-homepage">Nestigo Group Homepage</a></li>
-<li><a href="#nestigo-group-projects">Nestigo Group Projects</a>
+<li><a href="#jhttpclient-introduction">jHttpClient Introduction</a></li>
+<li><a href="#usage-reference">Usage Reference</a>
 <ul>
-<li><a href="#jhttpclient">jHttpClient</a></li>
+<li><a href="#using-the-restclient-blocking">Using the RestClient (Blocking)</a>
+<ul>
+<li><a href="#making-requests">Making requests</a></li>
+<li><a href="#constructor">Constructor</a></li>
+<li><a href="#responses">Responses</a></li>
+</ul>
+</li>
+<li><a href="#using-the-restjsonclient-blocking-with-json-binding">Using the RestJsonClient (Blocking) with JSON binding</a>
+<ul>
+<li><a href="#responses-1">Responses</a></li>
+</ul>
+</li>
+<li><a href="#using-the-asyncrestclient-non-blocking">Using the AsyncRestClient (Non-Blocking)</a>
+<ul>
+<li><a href="#making-requests-1">Making requests</a></li>
+<li><a href="#constructor-1">Constructor</a></li>
+<li><a href="#responses-2">Responses</a></li>
+</ul>
+</li>
+<li><a href="#using-the-asyncrestjsonclient-non-blocking">Using the AsyncRestJsonClient (Non-Blocking)</a></li>
+<li><a href="#requesthelper-class">RequestHelper class</a>
+<ul>
+<li><a href="#authenicationauthorization">Authenication/Authorization</a></li>
 </ul>
 </li>
 <li><a href="#about">About</a></li>
 </ul>
-<h1 id="nestigo-group-projects">Nestigo Group Projects</h1>
-<p>Here is a list of active projects that are being worked on:</p>
-<h2 id="jhttpclient">jHttpClient</h2>
-<p>Simplified Java Rest Http client library build on top of the new HttpClient delivered in Java 11.
-To the jHttpClient <a href="jHttpClient.html">documentation</a></p>
-<h1 id="about">About</h1>
-<p>If you want to report an isseu for any of the project, please check the documentaion for each.</p>
+</li>
+</ul>
+<h1 id="jhttpclient-introduction">jHttpClient Introduction</h1>
+<p>Simplified Java Rest Http client library build on top of the new <strong>HttpClient</strong> delivered in Java 11.</p>
+<h1 id="usage-reference">Usage Reference</h1>
+<p>The jHttpClient library provides both Blocking and Non-Blocking version of a Rest Client.</p>
+<h2 id="using-the-restclient-blocking">Using the RestClient (Blocking)</h2>
+<p>In case you need simple Rest Client in a classic imperative code to call Rest API, then the <strong>RestClient</strong> is what you need.</p>
+<h3 id="making-requests">Making requests</h3>
+<p>Here is an example how to do a simple <strong>GET</strong> request with the <strong>RestClient</strong>:</p>
+<pre><code><code><div>var restClient = new RestClient();
+restClient.get(&quot;https://example.com/rest/endpoint&quot;);
+</div></code></code></pre>
+<p>Here is an example how to do a simple <strong>POST</strong> request with the <strong>RestClient</strong>:</p>
+<pre><code><code><div>var restClient = new RestClient();
+var reqBody = &quot;{\&quot;test\&quot;: 1}&quot;;
+restClient.post(&quot;https://example.com/rest/endpoint&quot;, reqBody);
+</div></code></code></pre>
+<h3 id="constructor">Constructor</h3>
+<p>The default constructor creates an instance of the RestClient with common defaults: HTTP v1.1, No redirect from Https to Http, 30 Seconds timeout, UTF-8 charset and <strong>Content-Type: application/json</strong> header.
+You can overwrite, add new or remove headers that the RestClient is sending:</p>
+<pre><code><code><div>var restClient = new RestClient();
+// We overwrite the Content-Type
+restClient.addHeader(&quot;Content-Type&quot;, &quot;text/plain&quot;);
+// We add new header
+restClient.addHeader(&quot;CustomHeader&quot;, &quot;ExampleValue&quot;);
+// We send an request
+restClient.get(&quot;https://example.com/plain/text&quot;);
+// We remove the custom header
+restClient.removeHeader(&quot;CustomHeader&quot;);
+</div></code></code></pre>
+<p>In case the defaults don't suite your needs you can create instances of the RestClient with custom setting:</p>
+<pre><code><code><div>var customHeaders = Map.of(&quot;Content-Type&quot;, &quot;application/json&quot;, &quot;CustomName&quot;, &quot;CustomValue&quot;);
+var restClient = new RestClient(HttpClient.Version.HTTP_2, HttpClient.Redirect.ALWAYS, Duration.ofSeconds(10), customSslContect, customHeaders, StandardCharsets.ISO_8859_1);
+</div></code></code></pre>
+<h3 id="responses">Responses</h3>
+<p>The <strong>RestClient</strong> methods <em>get, post, put, patch, delete</em> return instances of <strong>StringResponse</strong> while <em>head</em> returns instance of <strong>NoBodyResponse</strong></p>
+<p>The StringResponse is Java <em>Record</em> that contains the body, response code and response headers:</p>
+<pre><code><code><div>record StringResponse(int code, Map&lt;String, List&lt;String&gt;&gt; headers, String body)
+</div></code></code></pre>
+<p>The NoBodyResponse is Java <em>Record</em> that contains only the response code and response headers:</p>
+<pre><code><code><div>record NoBodyResponse(int code, Map&lt;String, List&lt;String&gt;&gt; headers)
+</div></code></code></pre>
+<h2 id="using-the-restjsonclient-blocking-with-json-binding">Using the RestJsonClient (Blocking) with JSON binding</h2>
+<p>Usually when integrating Java application with a Rest Web Service, usually an existing JSON binding library (like Jackson or JSONB) is used so we use POJO objects.
+To this end there is implemeted mechanism that will allow you to provide a custom Json mapper of your choice to integrate directly with the Rest Client.</p>
+<p>Here is an example with JSONB:</p>
+<pre><code><code><div>// Implement the IObjectMapper interface 
+class VerySimpleCustomMapper extends IObjectMapper {
+
+    public CustomMapper() {
+        Jsonb jsonb = JsonbBuilder.create();
+    }
+
+    public String convertToJson(Object obj) throws ObjectMappingException {
+        return jsonb.toJson(obj);
+    }
+
+    public Object convertFromJson(String json, Class&lt;?&gt; outClass) throws ObjectMappingException {
+        return jsonb.fromJson(json, outClass);
+    }
+
+    //Rest of implementation if any
+
+}
+
+class App () {
+
+    public App() {
+        var customMapper = new VerySimpleCustomMapper();
+        var restClient = new RestJsonClient(customMapper);
+    }
+}
+</div></code></code></pre>
+<p>The <em>ObjectMappingException</em> should be thrown in case the serialization/desiralization implementation fails.</p>
+<h3 id="responses-1">Responses</h3>
+<p>The <strong>RestJsonClient</strong> methods <em>get, post, put, patch, delete</em> return instances of <strong>MappedResponse</strong> while <em>head</em> returns instance of <strong>NoBodyResponse</strong> like the regular RestClient</p>
+<p>The MappedResponse is Java <em>Record</em> that contains the body, response code and response headers:</p>
+<pre><code><code><div>record MappedResponse(int code, Map&lt;String, List&lt;String&gt;&gt; headers, Object body)
+</div></code></code></pre>
+<h2 id="using-the-asyncrestclient-non-blocking">Using the AsyncRestClient (Non-Blocking)</h2>
+<p>In case you need simple Rest Client in a reactive code to call Rest API, then the <strong>AsyncRestClient</strong> is what you need.
+It is build on top of Java CompletableFuture.
+To keep consistency, the API is the same as the <em>RestClient</em> with the only difference being the responses being a CompletableFuture</p>
+<h3 id="making-requests-1">Making requests</h3>
+<p>Here is an example how to do a simple <strong>GET</strong> request with the <strong>AsyncRestClient</strong>:</p>
+<pre><code><code><div>var asyncRestClient = new AsyncRestClient();
+asyncRestClient.get(&quot;https://example.com/rest/endpoint&quot;);
+</div></code></code></pre>
+<p>Here is an example how to do a simple <strong>POST</strong> request with the <strong>AsyncRestClient</strong>:</p>
+<pre><code><code><div>var asyncRestClient = new AsyncRestClient();
+var reqBody = &quot;{\&quot;test\&quot;: 1}&quot;;
+asyncRestClient.post(&quot;https://example.com/rest/endpoint&quot;, reqBody);
+</div></code></code></pre>
+<h3 id="constructor-1">Constructor</h3>
+<p>The default constructor creates an instance of the AsyncRestClient with common defaults: HTTP v1.1, No redirect from Https to Http, 30 Seconds timeout, UTF-8 charset and <strong>Content-Type: application/json</strong> header.
+You can overwrite, add new or remove headers that the AsyncRestClient is sending:</p>
+<pre><code><code><div>var asyncRestClient = new AsyncRestClient();
+// We overwrite the Content-Type
+asyncRestClient.addHeader(&quot;Content-Type&quot;, &quot;text/plain&quot;);
+// We add new header
+asyncRestClient.addHeader(&quot;CustomHeader&quot;, &quot;ExampleValue&quot;);
+// We send an request
+asyncRestClient.get(&quot;https://example.com/plain/text&quot;);
+// We remove the custom header
+asyncRestClient.removeHeader(&quot;CustomHeader&quot;);
+</div></code></code></pre>
+<p>In case the defaults don't suite your needs you can create instances of the AsyncRestClient with custom setting:</p>
+<pre><code><code><div>var customHeaders = Map.of(&quot;Content-Type&quot;, &quot;application/json&quot;, &quot;CustomName&quot;, &quot;CustomValue&quot;);
+var asyncRestClient = new AsyncRestClient(HttpClient.Version.HTTP_2, HttpClient.Redirect.ALWAYS, Duration.ofSeconds(10), customSslContect, customHeaders, StandardCharsets.ISO_8859_1);
+</div></code></code></pre>
+<h3 id="responses-2">Responses</h3>
+<p>The <strong>AsyncRestClient</strong> methods <em>get, post, put, patch, delete</em> return instances of <strong>CompletableFuture<StringResponse></strong> while <em>head</em> returns instance of <strong>CompletableFuture<NoBodyResponse></strong></p>
+<h2 id="using-the-asyncrestjsonclient-non-blocking">Using the AsyncRestJsonClient (Non-Blocking)</h2>
+<p>Usually when integrating Java application with a Rest Web Service, usually an existing JSON binding library (like Jackson or JSONB) is used so we use POJO objects.
+To this end there is implemeted mechanism that will allow you to provide a custom Json mapper of your choice to integrate directly with the Async Rest Client in the same manner as the imperative RestClient.</p>
+<h2 id="requesthelper-class">RequestHelper class</h2>
+<p>The <strong>RequestHelper</strong> class provides method for common uses cases</p>
+<h3 id="authenicationauthorization">Authenication/Authorization</h3>
+<p>Currently the helper can build Basic Authorization and Bearer token header values:</p>
+<pre><code><code><div>var basicAuthorizationValue = RequestHelper.buildBasicAuthHeader(&quot;user&quot;, &quot;password&quot;);
+
+var restClient = new RestClient();
+restClient.addHeader(&quot;Authorization&quot;, basicAuthorizationValue);
+
+//or
+
+var bearerTokenValue = RequestHelper.buildBearerHeader(&quot;token&quot;);
+restClient.addHeader(&quot;Authorization&quot;, bearerTokenValue);
+
+</div></code></code></pre>
+<h2 id="about">About</h2>
+<p>jHttpClient is opensource under the Apache Software Licence 2.0
+If you want to report an issue, you can do it at <a href="https://github.com/NestigoGroup/jhttpclient">https://github.com/NestigoGroup/jhttpclient</a></p>
 
         
         
